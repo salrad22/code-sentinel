@@ -1,0 +1,62 @@
+name: Publish to npm and MCP Registry
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.0.0, v0.2.1
+
+permissions:
+  contents: write
+  id-token: write  # Required for MCP Registry OIDC auth
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Update server.json version
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" server.json
+          cat server.json
+
+      - name: Download mcp-publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" -o mcp-publisher.tar.gz
+          tar xzf mcp-publisher.tar.gz
+          chmod +x mcp-publisher
+
+      - name: Authenticate with MCP Registry (OIDC)
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: |
+          # Use curl directly to bypass mcp-publisher bug
+          TOKEN=$(cat ~/.mcp_publisher_token | jq -r '.token')
+          curl -X POST "https://registry.modelcontextprotocol.io/v0.1/publish" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @server.json
