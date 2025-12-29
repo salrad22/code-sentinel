@@ -1,148 +1,148 @@
 const strengthPatterns = [
     // TypeScript usage
     {
-        id: 'STR001',
+        id: 'CS-STR001',
         pattern: /:\s*(?:string|number|boolean|void|never|unknown|null|undefined|\w+\[\]|Record<|Map<|Set<|Promise<)/g,
         title: 'Strong Typing',
         description: 'Explicit type annotations improve code safety and documentation.'
     },
     {
-        id: 'STR002',
+        id: 'CS-STR002',
         pattern: /interface\s+\w+\s*\{/g,
         title: 'Interface Definitions',
         description: 'Well-defined interfaces create clear contracts.'
     },
     {
-        id: 'STR003',
+        id: 'CS-STR003',
         pattern: /type\s+\w+\s*=\s*/g,
         title: 'Type Aliases',
         description: 'Type aliases improve code readability and reusability.'
     },
     // Error handling
     {
-        id: 'STR010',
+        id: 'CS-STR010',
         pattern: /try\s*\{[\s\S]+?\}\s*catch\s*\([^)]+\)\s*\{[\s\S]+?\}/g,
         title: 'Proper Try/Catch',
         description: 'Structured error handling with meaningful catch blocks.'
     },
     {
-        id: 'STR011',
+        id: 'CS-STR011',
         pattern: /\.catch\s*\(\s*(?:error|err|e)\s*=>\s*\{[^}]+\}/g,
         title: 'Promise Error Handling',
         description: 'Promise chains have explicit error handling.'
     },
     {
-        id: 'STR012',
+        id: 'CS-STR012',
         pattern: /class\s+\w+Error\s+extends\s+Error/g,
         title: 'Custom Error Classes',
         description: 'Custom errors enable better error classification.'
     },
     // Documentation
     {
-        id: 'STR020',
+        id: 'CS-STR020',
         pattern: /\/\*\*[\s\S]*?@(?:param|returns?|throws|example)[\s\S]*?\*\//g,
         title: 'JSDoc Documentation',
         description: 'Functions have proper JSDoc documentation.'
     },
     {
-        id: 'STR021',
+        id: 'CS-STR021',
         pattern: /\/\/\s+[A-Z][^.!?]*[.!?]\s*$/gm,
         title: 'Meaningful Comments',
         description: 'Code has explanatory comments in complete sentences.'
     },
     // Clean code patterns
     {
-        id: 'STR030',
+        id: 'CS-STR030',
         pattern: /const\s+\w+\s*=/g,
         title: 'Immutable Variables',
         description: 'Using const by default prevents accidental reassignment.'
     },
     {
-        id: 'STR031',
+        id: 'CS-STR031',
         pattern: /(?:readonly|Object\.freeze|as\s+const)/g,
         title: 'Immutability Patterns',
         description: 'Code uses immutability patterns for data safety.'
     },
     {
-        id: 'STR032',
+        id: 'CS-STR032',
         pattern: /(?:private|protected|#\w+)/g,
         title: 'Encapsulation',
         description: 'Proper use of access modifiers for encapsulation.'
     },
     // Async patterns
     {
-        id: 'STR040',
+        id: 'CS-STR040',
         pattern: /async\s+\w+\s*\([^)]*\)\s*(?::\s*Promise<[^>]+>)?/g,
         title: 'Async/Await Usage',
         description: 'Modern async/await syntax for readable asynchronous code.'
     },
     {
-        id: 'STR041',
+        id: 'CS-STR041',
         pattern: /Promise\.all\s*\(/g,
         title: 'Parallel Promise Execution',
         description: 'Using Promise.all for efficient parallel async operations.'
     },
     {
-        id: 'STR042',
+        id: 'CS-STR042',
         pattern: /Promise\.allSettled\s*\(/g,
         title: 'Resilient Promise Handling',
         description: 'Using allSettled handles both fulfilled and rejected promises.'
     },
     // Testing
     {
-        id: 'STR050',
+        id: 'CS-STR050',
         pattern: /(?:describe|it|test|expect)\s*\(/g,
         title: 'Test Coverage',
         description: 'Code includes tests with standard testing patterns.'
     },
     {
-        id: 'STR051',
+        id: 'CS-STR051',
         pattern: /\.test\.|\.spec\.|__tests__/g,
         title: 'Test Files Present',
         description: 'Dedicated test files follow conventions.'
     },
     // Validation
     {
-        id: 'STR060',
+        id: 'CS-STR060',
         pattern: /(?:z\.|yup\.|joi\.|validator\.)\w+/g,
         title: 'Schema Validation',
         description: 'Using validation libraries for input/data validation.'
     },
     {
-        id: 'STR061',
+        id: 'CS-STR061',
         pattern: /if\s*\(\s*!?\w+\s*(?:&&|\|\|)?\s*typeof\s+\w+/g,
         title: 'Type Guards',
         description: 'Runtime type checking before operations.'
     },
     // Modern JavaScript
     {
-        id: 'STR070',
+        id: 'CS-STR070',
         pattern: /(?:\?\.|&&\s*\w+\?\.)/g,
         title: 'Optional Chaining',
         description: 'Using ?. for safe property access.'
     },
     {
-        id: 'STR071',
+        id: 'CS-STR071',
         pattern: /\?\?\s*(?![\[\{])/g,
         title: 'Nullish Coalescing',
         description: 'Using ?? for proper null/undefined handling.'
     },
     {
-        id: 'STR072',
+        id: 'CS-STR072',
         pattern: /\.\.\.\w+/g,
         title: 'Spread Operator',
         description: 'Using spread for immutable operations.'
     },
     // Environment handling
     {
-        id: 'STR080',
+        id: 'CS-STR080',
         pattern: /process\.env\.\w+|import\.meta\.env\.\w+/g,
         title: 'Environment Variables',
         description: 'Configuration via environment variables.'
     },
     // Logging
     {
-        id: 'STR090',
+        id: 'CS-STR090',
         pattern: /(?:logger|log)\.\w+\s*\(/g,
         title: 'Structured Logging',
         description: 'Using a logging library instead of console.log.'

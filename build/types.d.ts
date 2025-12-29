@@ -1,5 +1,14 @@
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 export type Category = 'security' | 'error' | 'deceptive' | 'placeholder' | 'strength';
+export type VerificationStatus = 'confirmed' | 'needs_verification';
+export interface Verification {
+    status: VerificationStatus;
+    commands?: string[];
+    assumption?: string;
+    instruction?: string;
+    confirmIf?: string;
+    falsePositiveIf?: string;
+}
 export interface Issue {
     id: string;
     category: Category;
@@ -10,6 +19,7 @@ export interface Issue {
     column?: number;
     code?: string;
     suggestion?: string;
+    verification?: Verification;
 }
 export interface Strength {
     id: string;
@@ -40,4 +50,5 @@ export interface Pattern {
     severity: Severity;
     category: Category;
     suggestion?: string;
+    verification?: Verification;
 }

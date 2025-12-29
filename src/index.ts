@@ -12,6 +12,8 @@ import { analyzeDeceptivePatterns } from './analyzers/deceptive.js';
 import { analyzePlaceholders } from './analyzers/placeholders.js';
 import { analyzeErrors } from './analyzers/errors.js';
 import { analyzeStrengths } from './analyzers/strengths.js';
+import { analyzePatterns, inferLevelFromQuery, PatternLevel } from './analyzers/patterns.js';
+import { analyzeDesignPatterns, formatDesignAnalysis } from './analyzers/patterns.js';
 import { generateHtmlReport } from './report.js';
 import { AnalysisResult, Issue, Severity } from './types.js';
 
@@ -195,6 +197,51 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["code", "filename"]
         }
+      },
+      {
+        name: "analyze_patterns",
+        description: "Analyze code for architectural, design, and implementation patterns. Detects pattern usage, inconsistencies, and provides actionable suggestions for improvement. Returns LLM-optimized JSON with action items.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            code: {
+              type: "string",
+              description: "The source code to analyze"
+            },
+            filename: {
+              type: "string",
+              description: "The filename (used to detect language)"
+            },
+            level: {
+              type: "string",
+              enum: ["architectural", "design", "code", "all"],
+              description: "Pattern level to analyze: 'architectural' (system structure), 'design' (GoF patterns), 'code' (implementation idioms), or 'all' (default)"
+            },
+            query: {
+              type: "string",
+              description: "Optional natural language query to focus analysis (e.g., 'how is error handling done?')"
+            }
+          },
+          required: ["code", "filename"]
+        }
+      },
+      {
+        name: "analyze_design_patterns",
+        description: "Focused analysis of Gang of Four (GoF) design patterns in code. Detects Singleton, Factory, Observer, Strategy, and other classic patterns with confidence levels and implementation details.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            code: {
+              type: "string",
+              description: "The source code to analyze"
+            },
+            filename: {
+              type: "string",
+              description: "The filename (used to detect language)"
+            }
+          },
+          required: ["code", "filename"]
+        }
       }
     ]
   };
@@ -293,6 +340,80 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           ]
         };
       }
+      
+      case "analyze_patterns": {
+        // Determine level from explicit param or infer from query
+        let level: PatternLevel = 'all';
+        
+        if (args.level && ['architectural', 'design', 'code', 'all'].includes(args.level as string)) {
+          level = args.level as PatternLevel;
+        } else if (args.query && typeof args.query === 'string') {
+          const inferred = inferLevelFromQuery(args.query);
+          if (inferred) level = inferred;
+        }
+
+        const patternResult = analyzePatterns(code, filename, level);
+        
+        // Format output optimized for LLM action
+        const output = {
+          // Summary for quick understanding
+          summary: patternResult.summary,
+          
+          // What patterns were detected
+          detectedPatterns: patternResult.detectedPatterns.map(p => ({
+            pattern: p.name,
+            level: p.level,
+            confidence: p.confidence,
+            description: p.description,
+            foundAt: p.locations.map(l => `Line ${l.line}`)
+          })),
+          
+          // Inconsistencies that should be fixed
+          inconsistencies: patternResult.inconsistencies.map(i => ({
+            issue: i.title,
+            severity: i.severity,
+            variants: i.variants.map(v => `${v.approach}: ${v.count} occurrences`),
+            recommendation: i.recommendation
+          })),
+          
+          // Suggestions for improvement
+          suggestions: patternResult.suggestions.map(s => ({
+            title: s.title,
+            priority: s.priority,
+            currentApproach: s.currentApproach.name,
+            suggestedPattern: s.suggestedApproach.name,
+            why: s.suggestedApproach.why,
+            benefits: s.suggestedApproach.benefits,
+            tradeoffs: s.suggestedApproach.tradeoffs,
+            example: s.suggestedApproach.example
+          })),
+          
+          // Ready-to-execute action items for LLM
+          actionItems: patternResult.actionItems
+        };
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(output, null, 2)
+            }
+          ]
+        };
+      }
+
+      case "analyze_design_patterns": {
+        const result = analyzeDesignPatterns(code, filename);
+        const formatted = formatDesignAnalysis(result);
+        return {
+          content: [
+            {
+              type: "text",
+              text: formatted
+            }
+          ]
+        };
+      }
 
       default:
         return {
@@ -315,7 +436,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     };
   }
 });
-
 // Start the server
 async function main() {
   const transport = new StdioServerTransport();

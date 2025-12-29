@@ -1,9 +1,9 @@
-import { Issue, Pattern } from '../types.js';
+import { Issue, Pattern, Verification } from '../types.js';
 
 const placeholderPatterns: Pattern[] = [
   // TODO/FIXME comments
   {
-    id: 'PH001',
+    id: 'CS-PH001',
     pattern: /\/\/\s*TODO(?::|\.|\s).*$/gim,
     title: 'TODO Comment Found',
     description: 'Incomplete work marker found in code.',
@@ -12,7 +12,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Complete or remove the TODO before shipping.'
   },
   {
-    id: 'PH002',
+    id: 'CS-PH002',
     pattern: /\/\/\s*FIXME(?::|\.|\s).*$/gim,
     title: 'FIXME Comment Found',
     description: 'Known issue marker found - this should be fixed.',
@@ -21,7 +21,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Fix the issue or create a ticket to track it.'
   },
   {
-    id: 'PH003',
+    id: 'CS-PH003',
     pattern: /\/\/\s*HACK(?::|\.|\s).*$/gim,
     title: 'HACK Comment Found',
     description: 'Workaround marker found - technical debt.',
@@ -30,7 +30,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Document why the hack exists and plan to remove it.'
   },
   {
-    id: 'PH004',
+    id: 'CS-PH004',
     pattern: /\/\/\s*XXX(?::|\.|\s).*$/gim,
     title: 'XXX Comment Found',
     description: 'Attention marker found - requires review.',
@@ -41,7 +41,7 @@ const placeholderPatterns: Pattern[] = [
 
   // Lorem ipsum and dummy text
   {
-    id: 'PH010',
+    id: 'CS-PH010',
     pattern: /lorem\s+ipsum/gi,
     title: 'Lorem Ipsum Placeholder Text',
     description: 'Placeholder text found - replace with real content.',
@@ -50,7 +50,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Replace with actual content before release.'
   },
   {
-    id: 'PH011',
+    id: 'CS-PH011',
     pattern: /['"`](?:foo|bar|baz|qux|test|dummy|sample|example|placeholder)['"`]/gi,
     title: 'Common Placeholder Value',
     description: 'Generic placeholder value detected.',
@@ -61,7 +61,7 @@ const placeholderPatterns: Pattern[] = [
 
   // Test/dummy data
   {
-    id: 'PH020',
+    id: 'CS-PH020',
     pattern: /['"`]test@(?:test|example|dummy|sample)\.[a-z]+['"`]/gi,
     title: 'Test Email Address',
     description: 'Placeholder email found - may not be intended for production.',
@@ -70,7 +70,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Remove or replace with proper configuration.'
   },
   {
-    id: 'PH021',
+    id: 'CS-PH021',
     pattern: /['"`](?:123|1234|12345|123456|password|admin|root|test)['"`]/gi,
     title: 'Common Test Password/Value',
     description: 'Potentially insecure placeholder password or test value.',
@@ -79,7 +79,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Remove test credentials before deployment.'
   },
   {
-    id: 'PH022',
+    id: 'CS-PH022',
     pattern: /(?:localhost|127\.0\.0\.1):\d{4,5}/g,
     title: 'Localhost URL in Code',
     description: 'Hardcoded localhost URL may not work in production.',
@@ -88,7 +88,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Use environment variables for URLs.'
   },
   {
-    id: 'PH023',
+    id: 'CS-PH023',
     pattern: /['"`](?:xxx|yyy|zzz|aaa|bbb|ccc)['"`]/gi,
     title: 'Placeholder String Pattern',
     description: 'Obvious placeholder pattern detected.',
@@ -99,7 +99,7 @@ const placeholderPatterns: Pattern[] = [
 
   // Fake/test phone numbers
   {
-    id: 'PH030',
+    id: 'CS-PH030',
     pattern: /['"`](?:\+1)?[\s-]?555[\s-]?\d{3}[\s-]?\d{4}['"`]/g,
     title: 'Test Phone Number (555)',
     description: 'The 555 prefix is reserved for fictional use.',
@@ -108,7 +108,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Use proper phone number handling or config.'
   },
   {
-    id: 'PH031',
+    id: 'CS-PH031',
     pattern: /['"`](?:000[-\s]?00[-\s]?0000|111[-\s]?11[-\s]?1111|123[-\s]?45[-\s]?6789)['"`]/g,
     title: 'Obviously Fake ID Number',
     description: 'Placeholder ID number pattern detected.',
@@ -119,7 +119,7 @@ const placeholderPatterns: Pattern[] = [
 
   // Incomplete implementations
   {
-    id: 'PH040',
+    id: 'CS-PH040',
     pattern: /throw\s+new\s+Error\s*\(\s*['"`](?:not\s+implemented|todo|implement\s+me|coming\s+soon)['"`]\s*\)/gi,
     title: 'Not Implemented Error',
     description: 'Function explicitly marked as not implemented.',
@@ -128,7 +128,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Implement the function or remove the dead code.'
   },
   {
-    id: 'PH041',
+    id: 'CS-PH041',
     pattern: /(?:return|=)\s*['"`](?:TBD|TBA|N\/A|pending|placeholder)['"`]/gi,
     title: 'TBD/Placeholder Return Value',
     description: 'Code returns a placeholder instead of real value.',
@@ -139,7 +139,7 @@ const placeholderPatterns: Pattern[] = [
 
   // Debug/test code
   {
-    id: 'PH050',
+    id: 'CS-PH050',
     pattern: /console\.log\s*\(\s*['"`](?:debug|test|here|working|checkpoint|\d+)['"`]\s*\)/gi,
     title: 'Debug Console.log',
     description: 'Debug logging statement left in code.',
@@ -148,7 +148,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Remove debug statements or use a proper logger.'
   },
   {
-    id: 'PH051',
+    id: 'CS-PH051',
     pattern: /debugger\s*;/g,
     title: 'Debugger Statement',
     description: 'Debugger statement will pause execution in browser.',
@@ -157,7 +157,7 @@ const placeholderPatterns: Pattern[] = [
     suggestion: 'Remove debugger statements before committing.'
   },
   {
-    id: 'PH052',
+    id: 'CS-PH052',
     pattern: /alert\s*\(\s*['"`](?:test|debug|here|working)['"`]\s*\)/gi,
     title: 'Debug Alert',
     description: 'Debug alert left in code.',
@@ -168,7 +168,7 @@ const placeholderPatterns: Pattern[] = [
 
   // Commented out code blocks
   {
-    id: 'PH060',
+    id: 'CS-PH060',
     pattern: /\/\/\s*(?:const|let|var|function|class|if|for|while|return)\s+\w+/g,
     title: 'Commented Out Code',
     description: 'Code appears to be commented out rather than deleted.',
@@ -179,7 +179,7 @@ const placeholderPatterns: Pattern[] = [
 
   // Hardcoded test IDs
   {
-    id: 'PH070',
+    id: 'CS-PH070',
     pattern: /['"`](?:test-id|test_id|testid|fake-id|temp-id)['"`]/gi,
     title: 'Test ID in Code',
     description: 'Hardcoded test ID found.',
@@ -195,12 +195,23 @@ export function analyzePlaceholders(code: string, filename: string): Issue[] {
 
   for (const patternDef of placeholderPatterns) {
     patternDef.pattern.lastIndex = 0;
-    
+
     let match;
     while ((match = patternDef.pattern.exec(code)) !== null) {
       const beforeMatch = code.substring(0, match.index);
       const lineNumber = beforeMatch.split('\n').length;
       const lineContent = lines[lineNumber - 1] || '';
+
+      // Build verification with actual values substituted
+      let verification = patternDef.verification;
+      if (verification) {
+        verification = {
+          ...verification,
+          commands: verification.commands?.map(cmd =>
+            cmd.replace(/<filename>/g, filename)
+          )
+        };
+      }
 
       issues.push({
         id: patternDef.id,
@@ -210,7 +221,8 @@ export function analyzePlaceholders(code: string, filename: string): Issue[] {
         description: patternDef.description,
         line: lineNumber,
         code: lineContent.trim(),
-        suggestion: patternDef.suggestion
+        suggestion: patternDef.suggestion,
+        verification
       });
 
       if (!patternDef.pattern.global) break;

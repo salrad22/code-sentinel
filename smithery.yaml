@@ -1,0 +1,15 @@
+# Smithery configuration file: https://smithery.ai/docs/config
+# CodeSentinel - MCP server for code quality analysis
+
+build:
+  dockerfile: Dockerfile
+  dockerBuildPath: .
+
+startCommand:
+  type: stdio
+  configSchema:
+    # CodeSentinel requires no configuration - it's a standalone analysis tool
+    type: object
+    properties: {}
+  commandFunction: |-
+    (config) => ({ command: 'node', args: ['./build/index.js'], env: {} })

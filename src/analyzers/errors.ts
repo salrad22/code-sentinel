@@ -1,9 +1,9 @@
-import { Issue, Pattern } from '../types.js';
+import { Issue, Pattern, Verification } from '../types.js';
 
 const errorPatterns: Pattern[] = [
   // Unhandled promises
   {
-    id: 'ERR001',
+    id: 'CS-ERR001',
     pattern: /(?:^|\s)(?:await\s+)?(?:\w+\.)+\w+\s*\([^)]*\)\s*;?\s*$/gm,
     title: 'Potentially Unhandled Promise',
     description: 'Async call without await or .then()/.catch() may silently fail.',
@@ -14,7 +14,7 @@ const errorPatterns: Pattern[] = [
   
   // Missing error handling
   {
-    id: 'ERR010',
+    id: 'CS-ERR010',
     pattern: /async\s+(?:function\s+\w+|\w+\s*=\s*async)\s*\([^)]*\)\s*(?::\s*\w+\s*)?\{(?:(?!try\s*\{).)*\}/gs,
     title: 'Async Function Without Try/Catch',
     description: 'Async function has no error handling.',
@@ -25,7 +25,7 @@ const errorPatterns: Pattern[] = [
 
   // Variable shadowing and redeclaration
   {
-    id: 'ERR020',
+    id: 'CS-ERR020',
     pattern: /var\s+(\w+)[\s\S]*?var\s+\1\s*=/g,
     title: 'Variable Redeclaration with var',
     description: 'Same variable declared twice with var - potential bug.',
@@ -36,7 +36,7 @@ const errorPatterns: Pattern[] = [
 
   // Comparison issues
   {
-    id: 'ERR030',
+    id: 'CS-ERR030',
     pattern: /[^!=]==[^=]/g,
     title: 'Loose Equality (==)',
     description: 'Loose equality can cause unexpected type coercion.',
@@ -45,7 +45,7 @@ const errorPatterns: Pattern[] = [
     suggestion: 'Use strict equality (===) instead.'
   },
   {
-    id: 'ERR031',
+    id: 'CS-ERR031',
     pattern: /!=[^=]/g,
     title: 'Loose Inequality (!=)',
     description: 'Loose inequality can cause unexpected type coercion.',
@@ -54,7 +54,7 @@ const errorPatterns: Pattern[] = [
     suggestion: 'Use strict inequality (!==) instead.'
   },
   {
-    id: 'ERR032',
+    id: 'CS-ERR032',
     pattern: /if\s*\(\s*\w+\s*=\s*[^=]/g,
     title: 'Assignment in Condition',
     description: 'Assignment inside if condition - likely meant to use ==.',
@@ -65,7 +65,7 @@ const errorPatterns: Pattern[] = [
 
   // Null/undefined issues
   {
-    id: 'ERR040',
+    id: 'CS-ERR040',
     pattern: /(\w+)\.(\w+)\s*(?:\(|\.)/g,
     title: 'Potential Null Reference',
     description: 'Accessing property without null check - may throw.',
@@ -76,7 +76,7 @@ const errorPatterns: Pattern[] = [
 
   // Loop issues
   {
-    id: 'ERR050',
+    id: 'CS-ERR050',
     pattern: /for\s*\(\s*(?:var|let)\s+\w+\s+in\s+/g,
     title: 'for...in on Array',
     description: 'for...in iterates over keys, not values - often wrong for arrays.',
@@ -85,7 +85,7 @@ const errorPatterns: Pattern[] = [
     suggestion: 'Use for...of, forEach(), or traditional for loop for arrays.'
   },
   {
-    id: 'ERR051',
+    id: 'CS-ERR051',
     pattern: /while\s*\(\s*true\s*\)/g,
     title: 'Infinite Loop Pattern',
     description: 'while(true) requires explicit break - easy to create infinite loop.',
@@ -96,7 +96,7 @@ const errorPatterns: Pattern[] = [
 
   // Floating point comparison
   {
-    id: 'ERR060',
+    id: 'CS-ERR060',
     pattern: /(?:\d+\.\d+|\w+)\s*===?\s*(?:\d+\.\d+|\w+).*?(?:price|amount|total|sum|money|currency|rate)/gi,
     title: 'Floating Point Comparison',
     description: 'Direct comparison of floats (especially money) can fail due to precision.',
@@ -107,7 +107,7 @@ const errorPatterns: Pattern[] = [
 
   // Array mutation issues
   {
-    id: 'ERR070',
+    id: 'CS-ERR070',
     pattern: /\.forEach\s*\([^)]*\)\s*\{[^}]*(?:\.push|\.pop|\.shift|\.splice)/g,
     title: 'Array Mutation During Iteration',
     description: 'Modifying array while iterating can cause skipped elements.',
@@ -118,7 +118,7 @@ const errorPatterns: Pattern[] = [
 
   // parseInt without radix
   {
-    id: 'ERR080',
+    id: 'CS-ERR080',
     pattern: /parseInt\s*\(\s*[^,)]+\s*\)(?!\s*,)/g,
     title: 'parseInt Without Radix',
     description: 'parseInt without radix can give unexpected results.',
@@ -129,7 +129,7 @@ const errorPatterns: Pattern[] = [
 
   // Unreachable code
   {
-    id: 'ERR090',
+    id: 'CS-ERR090',
     pattern: /return\s+[^;]+;\s*\n\s*(?![\s}]|case\s|default:)/g,
     title: 'Potentially Unreachable Code',
     description: 'Code after return statement will never execute.',
@@ -140,7 +140,7 @@ const errorPatterns: Pattern[] = [
 
   // Dangerous delete
   {
-    id: 'ERR100',
+    id: 'CS-ERR100',
     pattern: /delete\s+\w+\[\w+\]/g,
     title: 'delete Operator on Array',
     description: 'delete leaves holes in arrays - length unchanged.',
@@ -151,7 +151,7 @@ const errorPatterns: Pattern[] = [
 
   // This binding issues
   {
-    id: 'ERR110',
+    id: 'CS-ERR110',
     pattern: /setTimeout\s*\(\s*(?:this\.\w+|function\s*\([^)]*\)\s*\{[^}]*this\.)/g,
     title: 'Potential "this" Binding Issue',
     description: 'Using "this" in setTimeout callback may not refer to expected context.',
@@ -162,7 +162,7 @@ const errorPatterns: Pattern[] = [
 
   // Constructor without new
   {
-    id: 'ERR120',
+    id: 'CS-ERR120',
     pattern: /(?:^|[^.])\b(?:Date|Array|Object|Map|Set|Promise)\s*\(\s*\)/g,
     title: 'Constructor Without "new"',
     description: 'Calling constructor without new may not work as expected.',
@@ -173,7 +173,7 @@ const errorPatterns: Pattern[] = [
 
   // Magic numbers
   {
-    id: 'ERR130',
+    id: 'CS-ERR130',
     pattern: /(?:if|while|for|===?|!==?|[<>]=?)\s*\(?\s*(?:\d{3,}|\d+\.\d+)\s*(?!\s*(?:px|em|rem|%|vh|vw|s|ms))/g,
     title: 'Magic Number',
     description: 'Hardcoded number without context makes code hard to maintain.',
@@ -184,7 +184,7 @@ const errorPatterns: Pattern[] = [
 
   // Async in constructor
   {
-    id: 'ERR140',
+    id: 'CS-ERR140',
     pattern: /constructor\s*\([^)]*\)\s*\{[^}]*await\s+/g,
     title: 'Await in Constructor',
     description: 'Constructors cannot be async - await will not work as expected.',
@@ -200,12 +200,23 @@ export function analyzeErrors(code: string, filename: string): Issue[] {
 
   for (const patternDef of errorPatterns) {
     patternDef.pattern.lastIndex = 0;
-    
+
     let match;
     while ((match = patternDef.pattern.exec(code)) !== null) {
       const beforeMatch = code.substring(0, match.index);
       const lineNumber = beforeMatch.split('\n').length;
       const lineContent = lines[lineNumber - 1] || '';
+
+      // Build verification with actual values substituted
+      let verification = patternDef.verification;
+      if (verification) {
+        verification = {
+          ...verification,
+          commands: verification.commands?.map(cmd =>
+            cmd.replace(/<filename>/g, filename)
+          )
+        };
+      }
 
       issues.push({
         id: patternDef.id,
@@ -215,7 +226,8 @@ export function analyzeErrors(code: string, filename: string): Issue[] {
         description: patternDef.description,
         line: lineNumber,
         code: lineContent.trim(),
-        suggestion: patternDef.suggestion
+        suggestion: patternDef.suggestion,
+        verification
       });
 
       if (!patternDef.pattern.global) break;

@@ -1,3 +1,15 @@
 /node_modules
 /build
 *.log
+
+# Tokens and secrets
+.mcp_publisher_token
+*_token
+*.token
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+secrets.json
+mcp-publisher.exe

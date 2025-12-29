@@ -2,6 +2,17 @@
 
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 export type Category = 'security' | 'error' | 'deceptive' | 'placeholder' | 'strength';
+export type VerificationStatus = 'confirmed' | 'needs_verification';
+
+// Verification requirements for findings that need external checks
+export interface Verification {
+  status: VerificationStatus;
+  commands?: string[];           // Commands to run before confirming
+  assumption?: string;           // What assumption is being made
+  instruction?: string;          // How to interpret results
+  confirmIf?: string;            // Condition that confirms the issue
+  falsePositiveIf?: string;      // Condition that indicates false positive
+}
 
 export interface Issue {
   id: string;
@@ -13,6 +24,7 @@ export interface Issue {
   column?: number;
   code?: string;
   suggestion?: string;
+  verification?: Verification;   // Added: verification requirements
 }
 
 export interface Strength {
@@ -46,4 +58,5 @@ export interface Pattern {
   severity: Severity;
   category: Category;
   suggestion?: string;
+  verification?: Verification;   // Added: verification requirements for this pattern
 }
