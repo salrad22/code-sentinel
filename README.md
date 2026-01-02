@@ -12,6 +12,75 @@ AI coding assistants can inadvertently introduce subtle issues: hardcoded secret
 - **Balanced analysis**: Detects both issues AND strengths for fair code assessment
 - **Multi-language support**: Works with TypeScript, JavaScript, Python, Go, Rust, Java, and more
 
+## Why Not Tree-sitter or AST-Based Tools?
+
+CodeSentinel intentionally uses a **pattern-based approach** rather than AST parsing. Here's why:
+
+### The Problem We Solve Is Different
+
+Traditional linters (ESLint, tree-sitter) detect **syntax errors** and **style violations**. CodeSentinel detects **semantically deceptive patterns** - code that is:
+
+- Syntactically valid (passes all linters)
+- Structurally correct (valid AST)
+- **But hides serious issues** that AI agents commonly produce
+
+### Examples AST Tools Miss
+
+```javascript
+// AST sees: valid try-catch block
+// CodeSentinel sees: error swallowing that masks failures
+try { riskyOperation(); } catch(e) { }
+
+// AST sees: valid function returning boolean
+// CodeSentinel sees: fake implementation that always succeeds
+function validateUser() { return true; } // TODO: implement
+
+// AST sees: valid fallback expression
+// CodeSentinel sees: failure masking - "no data" vs "fetch failed" indistinguishable
+const users = response.data || [];
+
+// AST sees: valid return statement
+// CodeSentinel sees: silent failure hiding
+if (error) { return null; } // error case
+```
+
+### What Each Approach Detects
+
+| Issue Type | AST/Tree-sitter | CodeSentinel |
+|:-----------|:----------------|:-------------|
+| Syntax errors | Yes | No (not our goal) |
+| Missing semicolons | Yes | No |
+| Unused variables | Yes | No |
+| **Empty catch blocks** | Partially | Yes |
+| **Silent error returns** | No | Yes |
+| **Fake success responses** | No | Yes |
+| **TODO/placeholder code** | No | Yes |
+| **Error-masking fallbacks** | No | Yes |
+| **Hardcoded secrets** | Limited | Yes |
+| **Deceptive comments** | No | Yes |
+
+### The Real Issue: Agent Behavior
+
+AI coding agents produce code that **looks correct** but contains subtle deceptions:
+
+1. **"Making the error go away"** - Empty catches, silent returns, swallowed exceptions
+2. **Placeholder implementations** - `return true`, `return []`, TODO comments
+3. **False confidence patterns** - `|| []` fallbacks that mask fetch failures
+4. **Suppression abuse** - `@ts-ignore`, `eslint-disable` to hide type errors
+
+These patterns pass every linter and compile successfully. AST tools see valid structure. Only pattern-based detection catches the **semantic intent** behind the code.
+
+### When to Use What
+
+| Tool | Use For |
+|:-----|:--------|
+| ESLint/TSLint | Style consistency, syntax rules, unused code |
+| Tree-sitter | Syntax highlighting, code navigation, refactoring |
+| TypeScript | Type safety, compile-time errors |
+| **CodeSentinel** | Agent-generated deceptions, error hiding, incomplete implementations |
+
+CodeSentinel complements these tools - it catches what they structurally cannot.
+
 ## Features
 
 - **Security Analysis** (16 patterns): Hardcoded secrets, SQL injection, XSS, command injection, insecure crypto, disabled SSL, and more
@@ -286,32 +355,105 @@ CodeSentinel detects language from file extensions:
 
 ## Extending CodeSentinel
 
-Add custom patterns by editing files in `src/analyzers/`:
+CodeSentinel uses a **data-driven pattern system** that separates pattern definitions from regex generation. This makes adding new patterns easier and more maintainable.
+
+### Project Structure
 
 ```
-src/analyzers/
-├── security.ts      # Security vulnerability patterns
-├── deceptive.ts     # Error-hiding patterns
-├── placeholders.ts  # Incomplete code patterns
-├── errors.ts        # Code smell patterns
-└── strengths.ts     # Good practice patterns
+src/
+├── patterns/
+│   ├── types.ts           # Type definitions for pattern configs
+│   ├── builders.ts        # Functions that generate regex from configs
+│   ├── compiler.ts        # Compiles definitions to executable patterns
+│   └── definitions/
+│       ├── security.ts    # Security vulnerability patterns
+│       ├── deceptive.ts   # Error-hiding patterns
+│       ├── placeholders.ts # Incomplete code patterns
+│       ├── errors.ts      # Code smell patterns
+│       └── index.ts       # Exports all definitions
+├── analyzers/
+│   ├── core.ts            # Unified analyzer using compiled patterns
+│   ├── security.ts        # Security analyzer (delegates to core)
+│   ├── deceptive.ts       # Deceptive analyzer (delegates to core)
+│   ├── placeholders.ts    # Placeholder analyzer (delegates to core)
+│   ├── errors.ts          # Error analyzer (delegates to core)
+│   └── strengths.ts       # Strength analyzer
+└── index.ts               # MCP server entry point
 ```
 
-Each pattern follows this structure:
+### Adding a New Pattern
+
+Instead of writing regex manually, you define **what** to detect and the system generates the regex:
+
+```typescript
+// Old approach (manual regex)
+{
+  id: 'CS-DEC001',
+  pattern: /catch\s*\([^)]*\)\s*\{\s*\}/g,  // Error-prone
+  title: 'Empty Catch Block',
+  // ...
+}
+
+// New approach (data-driven)
+{
+  id: 'CS-DEC001',
+  title: 'Empty Catch Block',
+  description: 'Silently swallowing errors makes debugging impossible.',
+  severity: 'high',
+  category: 'deceptive',
+  suggestion: 'At minimum, log the error. Better: handle it appropriately.',
+  match: {
+    type: 'catch_handler',
+    behavior: 'empty'
+  }
+}
+```
+
+### Available Match Types
+
+| Match Type | Description | Example Config |
+|:-----------|:------------|:---------------|
+| `empty_block` | Empty catch/finally/promise blocks | `{ type: 'empty_block', constructs: ['catch', '.catch'] }` |
+| `function_call` | Function/method calls | `{ type: 'function_call', names: ['eval', 'exec'] }` |
+| `returns_only` | Return statements with specific values | `{ type: 'returns_only', values: ['null', '[]', '{}'] }` |
+| `contains_text` | Text in comments/strings | `{ type: 'contains_text', terms: ['TODO', 'FIXME'], context: 'comment' }` |
+| `fallback_value` | Fallback patterns | `{ type: 'fallback_value', operators: ['\|\|'], values: ['[]'] }` |
+| `catch_handler` | Catch block behaviors | `{ type: 'catch_handler', behavior: 'empty' }` |
+| `promise_catch` | Promise .catch() behaviors | `{ type: 'promise_catch', behavior: 'returns_silent' }` |
+| `comment_marker` | TODO/FIXME/HACK markers | `{ type: 'comment_marker', markers: ['TODO', 'FIXME'] }` |
+| `string_literal` | Patterns inside strings | `{ type: 'string_literal', patterns: ['password', 'secret'] }` |
+| `secret_pattern` | API keys and tokens | `{ type: 'secret_pattern', kind: 'github' }` |
+| `url_pattern` | URL patterns | `{ type: 'url_pattern', protocol: 'http', excludeLocalhost: true }` |
+| `suppression_comment` | Linter suppressions | `{ type: 'suppression_comment', tools: ['ts-ignore', 'eslint-disable'] }` |
+| `type_cast` | Type casts | `{ type: 'type_cast', targets: ['any'] }` |
+| `comparison` | Comparison operators | `{ type: 'comparison', operators: ['==', '!='] }` |
+| `loop_pattern` | Loop patterns | `{ type: 'loop_pattern', kind: 'while_true' }` |
+| `raw_regex` | Escape hatch for complex patterns | `{ type: 'raw_regex', pattern: 'your-regex', flags: 'gi' }` |
+
+### Step-by-Step: Adding a Pattern
+
+1. **Choose the category** - security, deceptive, placeholder, or error
+2. **Open the definition file** - `src/patterns/definitions/<category>.ts`
+3. **Add a new pattern definition** using the appropriate match type
+4. **Build** - `npm run build`
+5. **Test** - Use the MCP inspector to verify detection
+
+### Pattern Definition Structure
 
 ```typescript
 {
-  id: 'CS-SEC001',           // Unique ID with category prefix
-  pattern: /regex/g,          // RegExp to match
-  title: 'Short description',
-  description: 'Detailed explanation',
-  severity: 'critical',       // critical | high | medium | low | info
-  category: 'security',
-  suggestion: 'How to fix',
-  verification: {             // Optional: reduce false positives
-    assumption: 'What we assume is true',
-    confirmIf: 'When to confirm as real issue',
-    falsePositiveIf: 'When to dismiss'
+  id: string;              // Unique ID: CS-<CAT><NUM> (e.g., CS-SEC001)
+  title: string;           // Short description (displayed in results)
+  description: string;     // Detailed explanation of the issue
+  severity: Severity;      // 'critical' | 'high' | 'medium' | 'low' | 'info'
+  category: Category;      // 'security' | 'deceptive' | 'placeholder' | 'error'
+  suggestion?: string;     // How to fix the issue
+  match: MatchConfig;      // What to detect (see match types above)
+  verification?: {         // Optional: reduce false positives
+    status: 'needs_verification' | 'confirmed';
+    assumption?: string;
+    confirmIf?: string;
+    falsePositiveIf?: string;
   }
 }
 ```
