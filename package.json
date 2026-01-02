@@ -1,6 +1,6 @@
 {
   "name": "code-sentinel-mcp",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "mcpName": "io.github.salrad22/code-sentinel",
   "description": "MCP server for code quality analysis - security, errors, deceptive patterns, and placeholder detection",
   "private": false,
