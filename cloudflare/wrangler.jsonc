@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "code-sentinel",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    { "pattern": "code-sentinel-mcp.sharara.dev/*", "zone_name": "sharara.dev" }
+  ],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["CodeSentinelMCP"] }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "MCP_OBJECT", "class_name": "CodeSentinelMCP" }
+    ]
+  },
+  "observability": {
+    "enabled": true
+  }
+}

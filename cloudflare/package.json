@@ -1,0 +1,21 @@
+{
+  "name": "code-sentinel-cloudflare",
+  "version": "0.2.3",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "agents": "^0.2.32",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250109.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^4.54.0"
+  }
+}

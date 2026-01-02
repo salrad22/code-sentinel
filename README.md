@@ -32,7 +32,7 @@ npm install -g code-sentinel-mcp
 ### From source
 
 ```bash
-git clone https://github.com/your-username/code-sentinel.git
+git clone https://github.com/salrad22/code-sentinel.git
 cd code-sentinel
 npm install
 npm run build
@@ -66,6 +66,47 @@ Add to your Claude Code MCP configuration file (`~/.claude/claude_desktop_config
   }
 }
 ```
+
+## Remote Server (Cloudflare Workers)
+
+CodeSentinel is also available as a remote MCP server on Cloudflare Workers. **No local installation required!**
+
+### Quick connect (Claude Code)
+
+```bash
+claude mcp add-remote code-sentinel https://code-sentinel-mcp.sharara.dev/sse
+```
+
+Or use the Streamable HTTP endpoint (recommended for newer clients):
+```bash
+claude mcp add --transport http code-sentinel https://code-sentinel-mcp.sharara.dev/mcp
+```
+
+### Endpoints
+
+| Endpoint | Protocol | Description |
+|:---------|:---------|:------------|
+| `https://code-sentinel-mcp.sharara.dev/mcp` | Streamable HTTP | Recommended |
+| `https://code-sentinel-mcp.sharara.dev/sse` | Server-Sent Events | Legacy support |
+| `https://code-sentinel-mcp.sharara.dev/` | HTTP GET | Health check / server info |
+
+### Self-hosting on Cloudflare
+
+Deploy your own instance:
+
+```bash
+cd cloudflare
+npm install
+npm run dev      # Local development at localhost:8787
+npm run deploy   # Deploy to your Cloudflare account
+```
+
+**Requirements:**
+- Cloudflare account (free tier works)
+- Wrangler CLI (`npm install -g wrangler`)
+- `wrangler login` to authenticate
+
+The server uses Durable Objects for persistent MCP connections. No database required.
 
 ## Available Tools
 
@@ -306,6 +347,8 @@ MIT
 
 ## Links
 
+- [GitHub Repository](https://github.com/salrad22/code-sentinel)
+- [npm package](https://www.npmjs.com/package/code-sentinel-mcp)
+- [Remote Server](https://code-sentinel-mcp.sharara.dev/)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Claude Code](https://claude.ai/code)
-- [npm package](https://www.npmjs.com/package/code-sentinel-mcp)
