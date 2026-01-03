@@ -95,7 +95,7 @@ interface Env {
 export class CodeSentinelMCP extends McpAgent<Env, {}, {}> {
   server = new McpServer({
     name: "code-sentinel",
-    version: "0.2.3",
+    version: "0.2.5",
   });
 
   async init() {
@@ -306,7 +306,7 @@ export default {
     if (url.pathname === "/" || url.pathname === "") {
       return new Response(JSON.stringify({
         name: "code-sentinel",
-        version: "0.2.3",
+        version: "0.2.5",
         description: "MCP server for code quality analysis",
         endpoints: {
           mcp: "/mcp (Streamable HTTP - recommended)",
