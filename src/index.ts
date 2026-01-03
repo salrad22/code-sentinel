@@ -131,6 +131,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["code", "filename"]
+        },
+        annotations: {
+          title: "Full Code Analysis",
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false
         }
       },
       {
@@ -149,6 +156,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["code", "filename"]
+        },
+        annotations: {
+          title: "Generate HTML Report",
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false
         }
       },
       {
@@ -167,6 +181,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["code", "filename"]
+        },
+        annotations: {
+          title: "Security Vulnerability Check",
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false
         }
       },
       {
@@ -185,6 +206,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["code", "filename"]
+        },
+        annotations: {
+          title: "Deceptive Pattern Check",
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false
         }
       },
       {
@@ -203,6 +231,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["code", "filename"]
+        },
+        annotations: {
+          title: "Placeholder Code Check",
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false
         }
       },
       {
@@ -230,6 +265,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["code", "filename"]
+        },
+        annotations: {
+          title: "Architecture Pattern Analysis",
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false
         }
       },
       {
@@ -248,6 +290,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["code", "filename"]
+        },
+        annotations: {
+          title: "GoF Design Pattern Analysis",
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false
         }
       }
     ]
@@ -843,43 +892,71 @@ server.setRequestHandler(ListResourcesRequestSchema, async () => {
         uri: "codesentinel://patterns/all",
         name: "All Patterns",
         description: "Complete list of all CodeSentinel detection patterns",
-        mimeType: "application/json"
+        mimeType: "application/json",
+        annotations: {
+          audience: ["assistant"],
+          priority: 0.8
+        }
       },
       {
         uri: "codesentinel://patterns/security",
         name: "Security Patterns",
         description: "Patterns for detecting security vulnerabilities (hardcoded secrets, SQL injection, XSS, etc.)",
-        mimeType: "application/json"
+        mimeType: "application/json",
+        annotations: {
+          audience: ["assistant"],
+          priority: 0.9
+        }
       },
       {
         uri: "codesentinel://patterns/deceptive",
         name: "Deceptive Patterns",
         description: "Patterns for detecting error-hiding code (empty catches, silent failures, fake success)",
-        mimeType: "application/json"
+        mimeType: "application/json",
+        annotations: {
+          audience: ["assistant"],
+          priority: 0.9
+        }
       },
       {
         uri: "codesentinel://patterns/placeholder",
         name: "Placeholder Patterns",
         description: "Patterns for detecting incomplete code (TODO, FIXME, dummy data, test values)",
-        mimeType: "application/json"
+        mimeType: "application/json",
+        annotations: {
+          audience: ["assistant"],
+          priority: 0.7
+        }
       },
       {
         uri: "codesentinel://patterns/error",
         name: "Error Patterns",
         description: "Patterns for detecting code smells and potential bugs (loose equality, null refs, async issues)",
-        mimeType: "application/json"
+        mimeType: "application/json",
+        annotations: {
+          audience: ["assistant"],
+          priority: 0.8
+        }
       },
       {
         uri: "codesentinel://stats",
         name: "Pattern Statistics",
         description: "Statistics about available patterns by category and severity",
-        mimeType: "application/json"
+        mimeType: "application/json",
+        annotations: {
+          audience: ["user", "assistant"],
+          priority: 0.5
+        }
       },
       {
         uri: "codesentinel://guide/categories",
         name: "Category Guide",
         description: "Explanation of each pattern category and when issues are detected",
-        mimeType: "text/markdown"
+        mimeType: "text/markdown",
+        annotations: {
+          audience: ["user"],
+          priority: 0.6
+        }
       }
     ]
   };

@@ -8,8 +8,29 @@ build:
 startCommand:
   type: stdio
   configSchema:
-    # CodeSentinel requires no configuration - it's a standalone analysis tool
     type: object
-    properties: {}
+    properties:
+      includeStrengths:
+        type: boolean
+        default: true
+        description: "Include code strengths in analysis results (good practices detected)"
+      minSeverity:
+        type: string
+        enum: ["critical", "high", "medium", "low", "info"]
+        default: "low"
+        description: "Minimum severity level to report (issues below this level are filtered)"
+      categories:
+        type: array
+        items:
+          type: string
+          enum: ["security", "deceptive", "placeholder", "error"]
+        default: ["security", "deceptive", "placeholder", "error"]
+        description: "Categories to include in analysis"
+      outputFormat:
+        type: string
+        enum: ["json", "markdown", "html"]
+        default: "json"
+        description: "Default output format for analysis results"
+    additionalProperties: false
   commandFunction: |-
-    (config) => ({ command: 'node', args: ['./build/index.js'], env: {} })
+    (config) => ({ command: 'node', args: ['./build/index.js'], env: { CODESENTINEL_CONFIG: JSON.stringify(config) } })
