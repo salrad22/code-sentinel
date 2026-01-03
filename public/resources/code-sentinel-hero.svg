@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bgGradHero" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0a1e"/>
+      <stop offset="50%" style="stop-color:#1e1b4b"/>
+      <stop offset="100%" style="stop-color:#312e81"/>
+    </linearGradient>
+    <linearGradient id="shieldGradHero" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="accentGradHero" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22d3ee"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="subtleGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradHero)"/>
+  
+  <!-- Subtle grid pattern -->
+  <g opacity="0.08" stroke="#6366f1" stroke-width="1">
+    <line x1="0" y1="100" x2="1200" y2="100"/>
+    <line x1="0" y1="200" x2="1200" y2="200"/>
+    <line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="500" x2="1200" y2="500"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+  
+  <!-- Decorative code snippets in background -->
+  <g opacity="0.06" fill="#a5b4fc" font-family="monospace" font-size="14">
+    <text x="50" y="80">const analyze = async (code) =&gt; {</text>
+    <text x="80" y="560">return { security: issues, patterns: found };</text>
+    <text x="900" y="120">if (deceptive) flag(line);</text>
+    <text x="850" y="550">await sentinel.scan(file);</text>
+  </g>
+  
+  <!-- Accent circles -->
+  <circle cx="100" cy="500" r="150" fill="#6366f1" opacity="0.1" filter="url(#glow)"/>
+  <circle cx="1100" cy="130" r="100" fill="#22d3ee" opacity="0.08" filter="url(#glow)"/>
+  
+  <!-- Main shield logo - centered left -->
+  <g transform="translate(200, 135)">
+    <!-- Shield shape -->
+    <path d="M150 0 L280 45 L280 150 C280 225 215 280 150 300 C85 280 20 225 20 150 L20 45 Z" 
+          fill="url(#shieldGradHero)" filter="url(#subtleGlow)"/>
+    
+    <!-- Inner shield highlight -->
+    <path d="M150 25 L255 62 L255 150 C255 210 205 255 150 272 C95 255 45 210 45 150 L45 62 Z" 
+          fill="none" stroke="#818cf8" stroke-width="3" opacity="0.4"/>
+    
+    <!-- Code brackets < > -->
+    <g fill="none" stroke="url(#accentGradHero)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" filter="url(#subtleGlow)">
+      <polyline points="125,105 75,150 125,195"/>
+      <polyline points="175,105 225,150 175,195"/>
+    </g>
+    
+    <!-- Center dot -->
+    <circle cx="150" cy="150" r="12" fill="#22d3ee" filter="url(#glow)"/>
+  </g>
+  
+  <!-- Text content -->
+  <g>
+    <!-- Main title -->
+    <text x="520" y="260" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="700" fill="#f1f5f9">Code</text>
+    <text x="520" y="345" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="700" fill="url(#accentGradHero)">Sentinel</text>
+    
+    <!-- Tagline -->
+    <text x="520" y="410" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="24" fill="#94a3b8">MCP Server for Code Quality Analysis</text>
+    
+    <!-- Feature pills -->
+    <g transform="translate(520, 450)">
+      <rect x="0" y="0" width="120" height="36" rx="18" fill="#4f46e5" opacity="0.3"/>
+      <text x="60" y="24" font-family="system-ui, sans-serif" font-size="14" fill="#c7d2fe" text-anchor="middle">Security</text>
+      
+      <rect x="135" y="0" width="160" height="36" rx="18" fill="#4f46e5" opacity="0.3"/>
+      <text x="215" y="24" font-family="system-ui, sans-serif" font-size="14" fill="#c7d2fe" text-anchor="middle">Deceptive Patterns</text>
+      
+      <rect x="310" y="0" width="130" height="36" rx="18" fill="#4f46e5" opacity="0.3"/>
+      <text x="375" y="24" font-family="system-ui, sans-serif" font-size="14" fill="#c7d2fe" text-anchor="middle">Placeholders</text>
+      
+      <rect x="455" y="0" width="140" height="36" rx="18" fill="#4f46e5" opacity="0.3"/>
+      <text x="525" y="24" font-family="system-ui, sans-serif" font-size="14" fill="#c7d2fe" text-anchor="middle">Design Patterns</text>
+    </g>
+  </g>
+  
+</svg>
