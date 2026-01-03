@@ -4,6 +4,13 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-01-02",
   "compatibility_flags": ["nodejs_compat"],
+  "build": {
+    "command": "",
+    "watch_dir": "src"
+  },
+  "rules": [
+    { "type": "ESModule", "globs": ["**/*.js"] }
+  ],
   "routes": [
     { "pattern": "code-sentinel-mcp.sharara.dev/*", "zone_name": "sharara.dev" }
   ],
