@@ -8,9 +8,9 @@
   },
   "main": "./build/index.js",
   "scripts": {
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
-    "watch": "tsc --watch",
-    "clean": "rm -rf build",
+    "build": "npx tsc",
+    "watch": "npx tsc --watch",
+    "clean": "rimraf build",
     "inspector": "npx @anthropic-ai/mcp-inspector node build/index.js"
   },
   "keywords": [

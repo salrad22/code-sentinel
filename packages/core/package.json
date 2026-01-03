@@ -20,9 +20,9 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
-    "clean": "rm -rf build"
+    "build": "npx tsc",
+    "watch": "npx tsc --watch",
+    "clean": "rimraf build"
   },
   "keywords": [
     "code-analysis",
