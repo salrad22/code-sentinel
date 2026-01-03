@@ -1,30 +1,22 @@
 {
-  "name": "code-sentinel-mcp",
+  "name": "codesentinel-monorepo",
   "version": "0.2.6",
-  "mcpName": "io.github.salrad22/code-sentinel",
-  "description": "MCP server for code quality analysis - security, errors, deceptive patterns, and placeholder detection",
-  "private": false,
+  "private": true,
+  "description": "CodeSentinel monorepo - MCP server for code quality analysis",
   "type": "module",
-  "bin": {
-    "code-sentinel": "./build/index.js"
-  },
-  "files": [
-    "build"
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
-    "prepare": "npm run build",
-    "watch": "tsc --watch",
-    "dev": "node --loader ts-node/esm src/index.ts",
-    "inspector": "npx @modelcontextprotocol/inspector build/index.js"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "zod": "^3.22.4"
+    "build": "npm run build --workspaces",
+    "build:core": "npm run build -w @codesentinel/core",
+    "build:stdio": "npm run build -w code-sentinel-mcp",
+    "build:all": "npm run build:core && npm run build:stdio",
+    "clean": "npm run clean --workspaces --if-present",
+    "dev": "npm run watch -w @codesentinel/core",
+    "inspector": "npm run inspector -w code-sentinel-mcp"
   },
   "devDependencies": {
-    "@types/node": "^20.11.24",
-    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "keywords": [

@@ -1,0 +1,33 @@
+{
+  "name": "code-sentinel-mcp",
+  "version": "0.2.6",
+  "description": "MCP server for code quality analysis - detects security issues, deceptive patterns, and incomplete code",
+  "type": "module",
+  "bin": {
+    "code-sentinel": "./build/index.js"
+  },
+  "main": "./build/index.js",
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "watch": "tsc --watch",
+    "clean": "rm -rf build",
+    "inspector": "npx @anthropic-ai/mcp-inspector node build/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "code-analysis",
+    "security",
+    "ai-coding"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@codesentinel/core": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}

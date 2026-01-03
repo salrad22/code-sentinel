@@ -1,0 +1,38 @@
+{
+  "name": "@codesentinel/core",
+  "version": "0.2.6",
+  "description": "Core analysis engine for CodeSentinel - patterns, analyzers, and types",
+  "type": "module",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    },
+    "./patterns": {
+      "types": "./build/patterns/index.d.ts",
+      "import": "./build/patterns/index.js"
+    },
+    "./analyzers": {
+      "types": "./build/analyzers/index.d.ts",
+      "import": "./build/analyzers/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf build"
+  },
+  "keywords": [
+    "code-analysis",
+    "security",
+    "patterns",
+    "quality"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
