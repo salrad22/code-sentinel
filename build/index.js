@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema, ListPromptsRequestSchema, GetPromptRequestSchema, } from "@modelcontextprotocol/sdk/types.js";
+import { CallToolRequestSchema, ListToolsRequestSchema, ListPromptsRequestSchema, GetPromptRequestSchema, ListResourcesRequestSchema, ReadResourceRequestSchema, } from "@modelcontextprotocol/sdk/types.js";
 import { analyzeSecurityIssues } from './analyzers/security.js';
 import { analyzeDeceptivePatterns } from './analyzers/deceptive.js';
 import { analyzePlaceholders } from './analyzers/placeholders.js';
@@ -10,6 +10,7 @@ import { analyzeStrengths } from './analyzers/strengths.js';
 import { analyzePatterns, inferLevelFromQuery } from './analyzers/patterns.js';
 import { analyzeDesignPatterns, formatDesignAnalysis } from './analyzers/patterns.js';
 import { generateHtmlReport } from './report.js';
+import { getDefinitions, getPatternStats } from './patterns/index.js';
 // Detect language from filename
 function detectLanguage(filename) {
     const ext = filename.split('.').pop()?.toLowerCase() || '';
@@ -85,6 +86,7 @@ const server = new Server({
     capabilities: {
         tools: {},
         prompts: {},
+        resources: {},
     },
 });
 // List available tools
@@ -763,6 +765,225 @@ Fix these issues and run the check again.
                 ]
             };
     }
+});
+// List available resources
+server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    return {
+        resources: [
+            {
+                uri: "codesentinel://patterns/all",
+                name: "All Patterns",
+                description: "Complete list of all CodeSentinel detection patterns",
+                mimeType: "application/json"
+            },
+            {
+                uri: "codesentinel://patterns/security",
+                name: "Security Patterns",
+                description: "Patterns for detecting security vulnerabilities (hardcoded secrets, SQL injection, XSS, etc.)",
+                mimeType: "application/json"
+            },
+            {
+                uri: "codesentinel://patterns/deceptive",
+                name: "Deceptive Patterns",
+                description: "Patterns for detecting error-hiding code (empty catches, silent failures, fake success)",
+                mimeType: "application/json"
+            },
+            {
+                uri: "codesentinel://patterns/placeholder",
+                name: "Placeholder Patterns",
+                description: "Patterns for detecting incomplete code (TODO, FIXME, dummy data, test values)",
+                mimeType: "application/json"
+            },
+            {
+                uri: "codesentinel://patterns/error",
+                name: "Error Patterns",
+                description: "Patterns for detecting code smells and potential bugs (loose equality, null refs, async issues)",
+                mimeType: "application/json"
+            },
+            {
+                uri: "codesentinel://stats",
+                name: "Pattern Statistics",
+                description: "Statistics about available patterns by category and severity",
+                mimeType: "application/json"
+            },
+            {
+                uri: "codesentinel://guide/categories",
+                name: "Category Guide",
+                description: "Explanation of each pattern category and when issues are detected",
+                mimeType: "text/markdown"
+            }
+        ]
+    };
+});
+// Read resource content
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    const { uri } = request.params;
+    // Pattern by ID: codesentinel://pattern/CS-SEC001
+    if (uri.startsWith("codesentinel://pattern/")) {
+        const patternId = uri.replace("codesentinel://pattern/", "");
+        const allPatterns = getDefinitions();
+        const pattern = allPatterns.find(p => p.id === patternId);
+        if (!pattern) {
+            return {
+                contents: [
+                    {
+                        uri,
+                        mimeType: "application/json",
+                        text: JSON.stringify({ error: `Pattern not found: ${patternId}` })
+                    }
+                ]
+            };
+        }
+        return {
+            contents: [
+                {
+                    uri,
+                    mimeType: "application/json",
+                    text: JSON.stringify({
+                        id: pattern.id,
+                        title: pattern.title,
+                        description: pattern.description,
+                        severity: pattern.severity,
+                        category: pattern.category,
+                        suggestion: pattern.suggestion,
+                        matchType: pattern.match.type
+                    }, null, 2)
+                }
+            ]
+        };
+    }
+    // All patterns
+    if (uri === "codesentinel://patterns/all") {
+        const allPatterns = getDefinitions();
+        const simplified = allPatterns.map(p => ({
+            id: p.id,
+            title: p.title,
+            severity: p.severity,
+            category: p.category,
+            description: p.description
+        }));
+        return {
+            contents: [
+                {
+                    uri,
+                    mimeType: "application/json",
+                    text: JSON.stringify(simplified, null, 2)
+                }
+            ]
+        };
+    }
+    // Patterns by category
+    if (uri.startsWith("codesentinel://patterns/")) {
+        const category = uri.replace("codesentinel://patterns/", "");
+        const patterns = getDefinitions(category);
+        const simplified = patterns.map(p => ({
+            id: p.id,
+            title: p.title,
+            severity: p.severity,
+            description: p.description,
+            suggestion: p.suggestion
+        }));
+        return {
+            contents: [
+                {
+                    uri,
+                    mimeType: "application/json",
+                    text: JSON.stringify(simplified, null, 2)
+                }
+            ]
+        };
+    }
+    // Stats
+    if (uri === "codesentinel://stats") {
+        const stats = getPatternStats();
+        return {
+            contents: [
+                {
+                    uri,
+                    mimeType: "application/json",
+                    text: JSON.stringify(stats, null, 2)
+                }
+            ]
+        };
+    }
+    // Category guide
+    if (uri === "codesentinel://guide/categories") {
+        const guide = `# CodeSentinel Pattern Categories
+
+## Security (CS-SEC)
+Detects vulnerabilities that could be exploited by attackers:
+- Hardcoded secrets (API keys, passwords, tokens)
+- SQL injection via string concatenation
+- XSS via innerHTML or dangerouslySetInnerHTML
+- Insecure cryptography (MD5, SHA1)
+- Disabled SSL validation
+- Wildcard CORS origins
+
+**Severity:** Mostly Critical and High
+**Action:** Fix immediately before deployment
+
+---
+
+## Deceptive (CS-DEC)
+Detects code that hides errors or creates false confidence:
+- Empty catch blocks that swallow errors
+- Silent promise rejections
+- Fallback values that mask failures (\`|| []\`, \`?? {}\`)
+- Excessive optional chaining
+- Fake success responses
+- Linter/type suppression (\`@ts-ignore\`, \`eslint-disable\`)
+
+**Severity:** Mostly High and Medium
+**Action:** Review and add proper error handling
+
+---
+
+## Placeholder (CS-PH)
+Detects incomplete implementations and test data:
+- TODO/FIXME/HACK comments
+- Lorem ipsum and dummy text
+- Test emails and passwords
+- Localhost URLs
+- Debug console.log statements
+- Commented-out code
+
+**Severity:** Mostly Medium and Low
+**Action:** Complete implementation or remove before release
+
+---
+
+## Error (CS-ERR)
+Detects code smells and potential runtime bugs:
+- Loose equality (\`==\` instead of \`===\`)
+- Assignment in conditions
+- Array mutation during iteration
+- parseInt without radix
+- Await in constructor
+- Floating-point money comparison
+
+**Severity:** Mixed
+**Action:** Review and fix based on context
+`;
+        return {
+            contents: [
+                {
+                    uri,
+                    mimeType: "text/markdown",
+                    text: guide
+                }
+            ]
+        };
+    }
+    // Unknown resource
+    return {
+        contents: [
+            {
+                uri,
+                mimeType: "text/plain",
+                text: `Unknown resource: ${uri}`
+            }
+        ]
+    };
 });
 // Start the server
 async function main() {
