@@ -33,4 +33,4 @@ startCommand:
         description: "Default output format for analysis results"
     additionalProperties: false
   commandFunction: |-
-    (config) => ({ command: 'node', args: ['./build/index.js'], env: { CODESENTINEL_CONFIG: JSON.stringify(config) } })
+    (config) => ({ command: 'node', args: ['./packages/server-stdio/build/index.js'], env: { CODESENTINEL_CONFIG: JSON.stringify(config) } })

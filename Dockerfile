@@ -2,18 +2,20 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files (root and workspaces)
 COPY package*.json ./
-COPY tsconfig.json ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/server-stdio/package.json ./packages/server-stdio/
 
-# Install all dependencies (including dev for build)
+# Install all dependencies
 RUN npm ci
 
 # Copy source files
-COPY src/ ./src/
+COPY packages/core/ ./packages/core/
+COPY packages/server-stdio/ ./packages/server-stdio/
 
-# Build TypeScript
-RUN npm run build
+# Build all packages
+RUN npm run build:all
 
 # Run the MCP server
-CMD ["node", "./build/index.js"]
+CMD ["node", "./packages/server-stdio/build/index.js"]
