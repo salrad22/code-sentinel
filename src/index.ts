@@ -5,6 +5,10 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
 import { analyzeSecurityIssues } from './analyzers/security.js';
@@ -16,6 +20,7 @@ import { analyzePatterns, inferLevelFromQuery, PatternLevel } from './analyzers/
 import { analyzeDesignPatterns, formatDesignAnalysis } from './analyzers/patterns.js';
 import { generateHtmlReport } from './report.js';
 import { AnalysisResult, Issue, Severity } from './types.js';
+import { getDefinitions, getPatternStats } from './patterns/index.js';
 
 // Detect language from filename
 function detectLanguage(filename: string): string {
@@ -100,6 +105,8 @@ const server = new Server(
   {
     capabilities: {
       tools: {},
+      prompts: {},
+      resources: {},
     },
   }
 );
@@ -436,6 +443,398 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     };
   }
 });
+
+// List available prompts
+server.setRequestHandler(ListPromptsRequestSchema, async () => {
+  return {
+    prompts: [
+      {
+        name: "analyze-and-report",
+        description: "Analyze code and generate a comprehensive markdown report with actionable items for fixing issues",
+        arguments: [
+          {
+            name: "code",
+            description: "The source code to analyze",
+            required: true
+          },
+          {
+            name: "filename",
+            description: "The filename for language detection (e.g., 'app.ts')",
+            required: true
+          }
+        ]
+      },
+      {
+        name: "fix-issues",
+        description: "Analyze code and generate step-by-step fix instructions that a coding agent can execute",
+        arguments: [
+          {
+            name: "code",
+            description: "The source code to analyze",
+            required: true
+          },
+          {
+            name: "filename",
+            description: "The filename for language detection (e.g., 'app.ts')",
+            required: true
+          },
+          {
+            name: "category",
+            description: "Optional: Focus on specific category (security, deceptive, placeholder, error)",
+            required: false
+          }
+        ]
+      },
+      {
+        name: "security-audit",
+        description: "Perform a security-focused audit with remediation steps",
+        arguments: [
+          {
+            name: "code",
+            description: "The source code to audit",
+            required: true
+          },
+          {
+            name: "filename",
+            description: "The filename for language detection",
+            required: true
+          }
+        ]
+      },
+      {
+        name: "pre-commit-check",
+        description: "Quick analysis suitable for pre-commit hooks - focuses on critical and high severity issues",
+        arguments: [
+          {
+            name: "code",
+            description: "The source code to check",
+            required: true
+          },
+          {
+            name: "filename",
+            description: "The filename for language detection",
+            required: true
+          }
+        ]
+      }
+    ]
+  };
+});
+
+// Handle prompt requests
+server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+
+  const code = args?.code as string || '';
+  const filename = args?.filename as string || 'unknown.ts';
+  const category = args?.category as string || '';
+
+  // Run analysis
+  const result = analyzeCode(code, filename);
+  const score = Math.max(0, 100 - (result.summary.critical * 25 + result.summary.high * 15 + result.summary.medium * 5 + result.summary.low));
+
+  switch (name) {
+    case "analyze-and-report": {
+      const issuesByCategory = {
+        critical: result.issues.filter(i => i.severity === 'critical'),
+        high: result.issues.filter(i => i.severity === 'high'),
+        medium: result.issues.filter(i => i.severity === 'medium'),
+        low: result.issues.filter(i => i.severity === 'low')
+      };
+
+      let markdown = `# CodeSentinel Analysis Report
+
+## File: ${filename}
+## Language: ${result.language}
+## Quality Score: ${score}/100
+
+---
+
+## Summary
+
+| Severity | Count |
+|:---------|:------|
+| Critical | ${result.summary.critical} |
+| High | ${result.summary.high} |
+| Medium | ${result.summary.medium} |
+| Low | ${result.summary.low} |
+| **Strengths** | ${result.summary.strengths} |
+
+---
+
+## Issues Found
+
+`;
+
+      if (issuesByCategory.critical.length > 0) {
+        markdown += `### Critical Issues (Fix Immediately)\n\n`;
+        issuesByCategory.critical.forEach(issue => {
+          markdown += `- **[${issue.id}] ${issue.title}** (Line ${issue.line || 'N/A'})\n`;
+          markdown += `  - ${issue.description}\n`;
+          markdown += `  - **Fix:** ${issue.suggestion || 'Review and fix manually'}\n`;
+          if (issue.code) markdown += `  - Code: \`${issue.code}\`\n`;
+          markdown += `\n`;
+        });
+      }
+
+      if (issuesByCategory.high.length > 0) {
+        markdown += `### High Priority Issues\n\n`;
+        issuesByCategory.high.forEach(issue => {
+          markdown += `- **[${issue.id}] ${issue.title}** (Line ${issue.line || 'N/A'})\n`;
+          markdown += `  - ${issue.description}\n`;
+          markdown += `  - **Fix:** ${issue.suggestion || 'Review and fix manually'}\n`;
+          markdown += `\n`;
+        });
+      }
+
+      if (issuesByCategory.medium.length > 0) {
+        markdown += `### Medium Priority Issues\n\n`;
+        issuesByCategory.medium.forEach(issue => {
+          markdown += `- **[${issue.id}] ${issue.title}** (Line ${issue.line || 'N/A'})\n`;
+          markdown += `  - ${issue.description}\n`;
+          markdown += `  - **Fix:** ${issue.suggestion || 'Review and fix manually'}\n`;
+          markdown += `\n`;
+        });
+      }
+
+      if (issuesByCategory.low.length > 0) {
+        markdown += `### Low Priority Issues\n\n`;
+        issuesByCategory.low.forEach(issue => {
+          markdown += `- **[${issue.id}] ${issue.title}** (Line ${issue.line || 'N/A'})\n`;
+          markdown += `  - ${issue.description}\n`;
+          markdown += `\n`;
+        });
+      }
+
+      if (result.strengths.length > 0) {
+        markdown += `---\n\n## Strengths Detected\n\n`;
+        result.strengths.forEach(s => {
+          markdown += `- **${s.title}**: ${s.description}\n`;
+        });
+      }
+
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: markdown
+            }
+          }
+        ]
+      };
+    }
+
+    case "fix-issues": {
+      let issues = result.issues;
+
+      // Filter by category if specified
+      if (category) {
+        issues = issues.filter(i => i.category === category);
+      }
+
+      // Focus on critical and high first
+      const priorityIssues = issues.filter(i => i.severity === 'critical' || i.severity === 'high');
+      const otherIssues = issues.filter(i => i.severity !== 'critical' && i.severity !== 'high');
+
+      let prompt = `# Code Fix Instructions for ${filename}
+
+You are a coding agent. The following issues were detected in the code. Fix them in order of priority.
+
+## Analysis Summary
+- Total issues: ${issues.length}
+- Critical: ${issues.filter(i => i.severity === 'critical').length}
+- High: ${issues.filter(i => i.severity === 'high').length}
+- Medium: ${issues.filter(i => i.severity === 'medium').length}
+- Low: ${issues.filter(i => i.severity === 'low').length}
+
+---
+
+## Priority Fixes (Do These First)
+
+`;
+
+      priorityIssues.forEach((issue, index) => {
+        prompt += `### Fix ${index + 1}: ${issue.title}
+- **ID:** ${issue.id}
+- **Severity:** ${issue.severity.toUpperCase()}
+- **Line:** ${issue.line || 'Unknown'}
+- **Problem:** ${issue.description}
+- **Current Code:** \`${issue.code || 'N/A'}\`
+- **Action Required:** ${issue.suggestion || 'Fix this issue'}
+
+`;
+      });
+
+      if (otherIssues.length > 0) {
+        prompt += `---
+
+## Additional Fixes (Lower Priority)
+
+`;
+        otherIssues.forEach((issue, index) => {
+          prompt += `### ${index + 1}. [${issue.severity.toUpperCase()}] ${issue.title}
+- Line ${issue.line || 'Unknown'}: ${issue.description}
+- Fix: ${issue.suggestion || 'Review and fix'}
+
+`;
+        });
+      }
+
+      prompt += `---
+
+## Instructions for Agent
+
+1. Read each issue carefully
+2. Locate the line in the code
+3. Apply the suggested fix
+4. Verify the fix doesn't break other functionality
+5. Move to the next issue
+
+After fixing all issues, run CodeSentinel analysis again to verify fixes.
+`;
+
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: prompt
+            }
+          }
+        ]
+      };
+    }
+
+    case "security-audit": {
+      const securityIssues = result.issues.filter(i => i.category === 'security');
+
+      let prompt = `# Security Audit Report: ${filename}
+
+## Overview
+- Security issues found: ${securityIssues.length}
+- Critical: ${securityIssues.filter(i => i.severity === 'critical').length}
+- High: ${securityIssues.filter(i => i.severity === 'high').length}
+- Medium: ${securityIssues.filter(i => i.severity === 'medium').length}
+
+`;
+
+      if (securityIssues.length === 0) {
+        prompt += `No security vulnerabilities detected. However, this automated scan may not catch all issues. Manual security review is recommended for sensitive code.
+`;
+      } else {
+        prompt += `## Vulnerabilities Found
+
+`;
+        securityIssues.forEach((issue, index) => {
+          prompt += `### ${index + 1}. ${issue.title}
+- **Severity:** ${issue.severity.toUpperCase()}
+- **ID:** ${issue.id}
+- **Line:** ${issue.line || 'Unknown'}
+- **Description:** ${issue.description}
+- **Vulnerable Code:** \`${issue.code || 'N/A'}\`
+- **Remediation:** ${issue.suggestion || 'Fix immediately'}
+`;
+          if (issue.verification) {
+            prompt += `- **Verification:** ${issue.verification.instruction || 'Manual verification required'}
+`;
+          }
+          prompt += `\n`;
+        });
+
+        prompt += `## Remediation Priority
+
+1. Fix all CRITICAL issues immediately - these may be actively exploitable
+2. Address HIGH severity issues before deployment
+3. Review MEDIUM issues in next sprint
+4. LOW issues can be addressed as technical debt
+
+## Next Steps
+
+1. Fix issues in order of severity
+2. Re-run security audit after fixes
+3. Consider additional security testing (penetration testing, SAST/DAST)
+`;
+      }
+
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: prompt
+            }
+          }
+        ]
+      };
+    }
+
+    case "pre-commit-check": {
+      const blockingIssues = result.issues.filter(i =>
+        i.severity === 'critical' || i.severity === 'high'
+      );
+
+      let prompt = `# Pre-Commit Check: ${filename}
+
+`;
+
+      if (blockingIssues.length === 0) {
+        prompt += `## PASS
+
+No critical or high-severity issues detected. Safe to commit.
+
+**Score:** ${score}/100
+`;
+      } else {
+        prompt += `## FAIL - ${blockingIssues.length} blocking issue(s)
+
+The following issues must be fixed before committing:
+
+`;
+        blockingIssues.forEach((issue, index) => {
+          prompt += `${index + 1}. **[${issue.severity.toUpperCase()}]** ${issue.title} (Line ${issue.line || '?'})
+   - ${issue.suggestion || issue.description}
+`;
+        });
+
+        prompt += `
+---
+
+Fix these issues and run the check again.
+`;
+      }
+
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: prompt
+            }
+          }
+        ]
+      };
+    }
+
+    default:
+      return {
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: `Unknown prompt: ${name}`
+            }
+          }
+        ]
+      };
+  }
+});
+
 // Start the server
 async function main() {
   const transport = new StdioServerTransport();
